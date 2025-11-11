@@ -2,7 +2,7 @@
 # build, e.g. a custom OpenJDK you built, then fill in
 # the following line. Otherwise comment it.
 # JAVA_HOME = /home/xuanrui/jdk
-JAVA_HOME = /etc/alternatives/java_sdk_1.8.0
+JAVA_HOME = /Library/Java/JavaVirtualMachines/jdk1.8.0_202.jdk/Contents/Home
 
 
 # Use javac at JAVA_HOME and g++ by default
@@ -17,7 +17,7 @@ ifneq ($(NOSCALA), true)
 endif
 
 # Necessary Java libraries
-INC_PATH  = -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/linux
+INC_PATH  = -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/darwin
 
 JNIF_INC_PATH = /data/rveroy/pulsrc/jnif-fork/src-libjnif
 JNIF_LIB_PATH = /data/rveroy/pulsrc/jnif-fork/build

@@ -1,11 +1,9 @@
 package veroy.research.et2.javassist;
 
-import java.lang.Runtime;
 import java.lang.Thread;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Array;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.Arrays;
 import java.io.PrintWriter;
 import java.util.concurrent.locks.ReentrantLock;
 // TODO: import org.apache.log4j.Logger;
@@ -75,6 +73,10 @@ public class ETProxy {
         } else {
             inInstrumentMethod.set(true);
         }
+        
+        int receiverHash = (receiver == null) ? 0 : System.identityHashCode(receiver);
+        long threadId = System.identityHashCode(Thread.currentThread());
+        
         mx.lock();
         try {
             synchronized(ptr) {
@@ -85,11 +87,14 @@ public class ETProxy {
                 // wait on ptr to prevent overflow
                 int currPtr = ptr.getAndIncrement();
                 firstBuffer[currPtr] = methodId;
-                secondBuffer[currPtr] = (receiver == null) ? 0 : System.identityHashCode(receiver);
+                secondBuffer[currPtr] = receiverHash;
                 eventTypeBuffer[currPtr] = 1; // TODO: Make into constants.
                 timestampBuffer[currPtr] = timestamp; // TODO: Not really useful
-                threadIDBuffer[currPtr] = System.identityHashCode(Thread.currentThread());
+                threadIDBuffer[currPtr] = threadId;
             }
+            
+            // Merlin: Track method entry for reachability analysis
+            MerlinTracker.onMethodEntry(methodId, receiverHash, threadId);
         } finally {
             mx.unlock();
         }
@@ -104,6 +109,9 @@ public class ETProxy {
         } else {
             inInstrumentMethod.set(true);
         }
+        
+        long threadId = System.identityHashCode(Thread.currentThread());
+        
         mx.lock();
         try {
             synchronized(ptr) {
@@ -115,7 +123,20 @@ public class ETProxy {
                 firstBuffer[currPtr] = methodId;
                 eventTypeBuffer[currPtr] = 2;
                 timestampBuffer[currPtr] = timestamp;
-                threadIDBuffer[currPtr] = System.identityHashCode(Thread.currentThread());
+                threadIDBuffer[currPtr] = threadId;
+            }
+            
+            // CRITICAL: Flush buffer BEFORE detecting deaths
+            // This ensures E record is written before D records
+            flushBuffer();
+            
+            // Merlin: Track method exit and check for deaths
+            // Deaths are detected at method boundaries for accuracy
+            java.util.List<MerlinTracker.DeathRecord> deaths = MerlinTracker.onMethodExit(methodId, threadId);
+            
+            // Write death records immediately after the method exit
+            for (MerlinTracker.DeathRecord death : deaths) {
+                traceWriter.println(death.toString());
             }
         } finally {
             mx.unlock();
@@ -130,6 +151,10 @@ public class ETProxy {
         } else {
             inInstrumentMethod.set(true);
         }
+        
+        int objectId = System.identityHashCode(obj);
+        long threadId = System.identityHashCode(Thread.currentThread());
+        
         mx.lock();
         try {
             synchronized(ptr) {
@@ -138,14 +163,17 @@ public class ETProxy {
                     assert(ptr.get() == 0);
                 }
                 int currPtr = ptr.getAndIncrement();
-                firstBuffer[currPtr] = System.identityHashCode(obj);
+                firstBuffer[currPtr] = objectId;
                 eventTypeBuffer[currPtr] = 3; // TODO: Create a constant for this.
                 secondBuffer[currPtr] = allocdClassID;
                 thirdBuffer[currPtr] = allocSiteID;
                 fourthBuffer[currPtr] = inst.getObjectSize(obj);
                 timestampBuffer[currPtr] = timestamp;
-                threadIDBuffer[currPtr] = System.identityHashCode(Thread.currentThread());
+                threadIDBuffer[currPtr] = threadId;
             }
+            
+            // Merlin: Track object allocation
+            MerlinTracker.onObjectAlloc(objectId, threadId, timestamp);
         } finally {
             mx.unlock();
         }
@@ -165,6 +193,11 @@ public class ETProxy {
         } else {
             inInstrumentMethod.set(true);
         }
+        
+        int tgtObjectId = System.identityHashCode(tgtObject);
+        int sourceObjectId = System.identityHashCode(object);
+        long threadId = System.identityHashCode(Thread.currentThread());
+        
         mx.lock();
         try {
             synchronized(ptr) {
@@ -174,13 +207,16 @@ public class ETProxy {
                 } else {
                     int currPtr = ptr.getAndIncrement();
                     eventTypeBuffer[currPtr] = 7;
-                    firstBuffer[currPtr] = System.identityHashCode(tgtObject);
+                    firstBuffer[currPtr] = tgtObjectId;
                     secondBuffer[currPtr] = fieldId;
-                    thirdBuffer[currPtr] = System.identityHashCode(object);
+                    thirdBuffer[currPtr] = sourceObjectId;
                     timestampBuffer[currPtr] = timestamp;
-                    threadIDBuffer[currPtr] = System.identityHashCode(Thread.currentThread());
+                    threadIDBuffer[currPtr] = threadId;
                 }
             }
+            
+            // Merlin: Track field update for object graph
+            MerlinTracker.onFieldUpdate(tgtObjectId, sourceObjectId, threadId);
         } finally {
             mx.unlock();
         }
@@ -197,6 +233,9 @@ public class ETProxy {
         } else {
             inInstrumentMethod.set(true);
         }
+        
+        int objectId = System.identityHashCode(arrayObj);
+        long threadId = System.identityHashCode(Thread.currentThread());
 
         mx.lock();
         try {
@@ -207,7 +246,7 @@ public class ETProxy {
                 } else {
                     int currPtr = ptr.getAndIncrement();
                     eventTypeBuffer[currPtr] = 4;
-                    firstBuffer[currPtr] = System.identityHashCode(arrayObj);
+                    firstBuffer[currPtr] = objectId;
                     secondBuffer[currPtr] = typeId;
                     try {
                         thirdBuffer[currPtr] = Array.getLength(arrayObj);
@@ -217,9 +256,12 @@ public class ETProxy {
                     fourthBuffer[currPtr] = inst.getObjectSize(arrayObj);
                     fifthBuffer[currPtr] = allocSiteId;
                     timestampBuffer[currPtr] = timestamp;
-                    threadIDBuffer[currPtr] = System.identityHashCode(Thread.currentThread());
+                    threadIDBuffer[currPtr] = threadId;
                 }
             }
+            
+            // Merlin: Track array allocation
+            MerlinTracker.onObjectAlloc(objectId, threadId, timestamp);
         } finally {
             mx.unlock();
         }
@@ -389,10 +431,10 @@ public class ETProxy {
 
     public static void flushBuffer()
     {
-
         try {
             mx.lock();
-            int bufSize = Math.max(ptr.get(), BUFMAX);
+            int bufSize = ptr.get();
+            
             for (int i = 0; i < bufSize; i++) {
                 switch (eventTypeBuffer[i]) {
                     case 1: // method entry
@@ -471,6 +513,36 @@ public class ETProxy {
                 }
             }
             ptr.set(0);
+            traceWriter.flush();
+        } finally {
+            mx.unlock();
+        }
+    }
+    
+    /**
+     * Shutdown hook to finalize trace and write remaining death records
+     */
+    public static void onShutdown() {
+        mx.lock();
+        try {
+            // Flush any remaining buffered events
+            flushBuffer();
+            
+            // Merlin: Final death detection for all remaining objects
+            java.util.List<MerlinTracker.DeathRecord> deaths = MerlinTracker.onShutdown();
+            
+            // Write final death records
+            for (MerlinTracker.DeathRecord death : deaths) {
+                traceWriter.println(death.toString());
+            }
+            
+            // Close trace writer
+            if (traceWriter != null) {
+                traceWriter.flush();
+                traceWriter.close();
+            }
+            
+            System.err.println("ET3 trace complete with Merlin death tracking");
         } finally {
             mx.unlock();
         }

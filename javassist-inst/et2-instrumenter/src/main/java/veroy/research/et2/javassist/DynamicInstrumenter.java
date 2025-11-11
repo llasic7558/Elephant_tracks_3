@@ -51,6 +51,7 @@ public class DynamicInstrumenter {
                .addShutdownHook( new Thread() { 
                                      public void run() {
                                          System.err.println("SHUTDOWN running.");
+                                         ETProxy.onShutdown(); // Includes flush, Merlin final deaths, and close
                                          MethodInstrumenter.writeMapsToFile();
                                      }
                });
