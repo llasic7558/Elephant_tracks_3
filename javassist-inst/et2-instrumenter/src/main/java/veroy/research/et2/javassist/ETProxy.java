@@ -523,13 +523,21 @@ public class ETProxy {
      * Shutdown hook to finalize trace and write remaining death records
      */
     public static void onShutdown() {
-        mx.lock();
         try {
+            mx.lock();
+            
+            System.err.println("ET3 shutting down, finalizing trace...");
+            
             // Flush any remaining buffered events
             flushBuffer();
             
             // Merlin: Final death detection for all remaining objects
+            // This may be slow for large benchmarks
+            long startTime = System.currentTimeMillis();
             java.util.List<MerlinTracker.DeathRecord> deaths = MerlinTracker.onShutdown();
+            long elapsed = System.currentTimeMillis() - startTime;
+            
+            System.err.println("Merlin final analysis: " + deaths.size() + " deaths in " + elapsed + "ms");
             
             // Write final death records
             for (MerlinTracker.DeathRecord death : deaths) {
@@ -543,8 +551,15 @@ public class ETProxy {
             }
             
             System.err.println("ET3 trace complete with Merlin death tracking");
+        } catch (Exception e) {
+            System.err.println("Error during ET3 shutdown: " + e.getMessage());
+            e.printStackTrace();
         } finally {
-            mx.unlock();
+            try {
+                mx.unlock();
+            } catch (Exception e) {
+                // Ignore unlock errors during shutdown
+            }
         }
     }
     
