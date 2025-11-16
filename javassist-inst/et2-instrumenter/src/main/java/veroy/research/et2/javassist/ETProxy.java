@@ -17,6 +17,7 @@ public class ETProxy {
     // Thread local boolean w/ default value false
     private static final InstrumentFlag inInstrumentMethod = new InstrumentFlag();
     private static ReentrantLock mx = new ReentrantLock();
+    private static volatile boolean isShuttingDown = false;
 
     // TODO: private static Logger et2Logger = Logger.getLogger(ETProxy.class);
 
@@ -33,6 +34,16 @@ public class ETProxy {
     private static long[] threadIDBuffer = new long[BUFMAX];
 
     private static AtomicInteger ptr = new AtomicInteger();
+    
+    // Logical clock: increments at method entry/exit 
+    private static AtomicInteger logicalClock = new AtomicInteger(0);
+    
+    /**
+     * Get current logical time (for Merlin death timestamps)
+     */
+    public static long getLogicalTime() {
+        return logicalClock.get();
+    }
     /*
 
 
@@ -67,7 +78,8 @@ public class ETProxy {
     }
 
     public static void onEntry(int methodId, Object receiver) {
-        long timestamp = System.nanoTime();
+        // Logical clock ticks at method entry
+        long timestamp = logicalClock.incrementAndGet();
         if (inInstrumentMethod.get()) {
             return;
         } else {
@@ -103,7 +115,8 @@ public class ETProxy {
 
     public static void onExit(int methodId)
     {
-        long timestamp = System.nanoTime();
+        // Logical clock ticks at method exit
+        long timestamp = logicalClock.incrementAndGet();
         if (inInstrumentMethod.get()) {
             return;
         } else {
@@ -135,8 +148,10 @@ public class ETProxy {
             java.util.List<MerlinTracker.DeathRecord> deaths = MerlinTracker.onMethodExit(methodId, threadId);
             
             // Write death records immediately after the method exit
-            for (MerlinTracker.DeathRecord death : deaths) {
-                traceWriter.println(death.toString());
+            if (!isShuttingDown && traceWriter != null) {
+                for (MerlinTracker.DeathRecord death : deaths) {
+                    traceWriter.println(death.toString());
+                }
             }
         } finally {
             mx.unlock();
@@ -145,7 +160,8 @@ public class ETProxy {
     }
 
     public static void onObjectAlloc(Object obj, int allocdClassID, int allocSiteID) {
-        long timestamp = System.nanoTime();
+        // Use current logical time (no tick for allocation)
+        long timestamp = logicalClock.get();
         if (inInstrumentMethod.get()) {
             return;
         } else {
@@ -182,20 +198,22 @@ public class ETProxy {
             
     // ET1 looked like this:
     //       U <old-target> <object> <new-target> <field> <thread>
-    // ET2 is now:
-    //       U  srcObjectHash targetObjectHash fieldId threadId?
-    //       0         1           2              3       4
-    public static void onPutField(Object tgtObject, Object object, int fieldId)
+    // ET2/ET3 format:
+    //       U  <source-obj-id> <target-obj-id> <field-id> <thread-id>
+    // For assignment: receiver.field = value
+    //       U  <receiver-id> <value-id> <field-id> <thread-id>
+    public static void onPutField(Object receiver, Object value, int fieldId)
     {
-        long timestamp = System.nanoTime();
+        // Use current logical time (no tick for field update)
+        long timestamp = logicalClock.get();
         if (inInstrumentMethod.get()) {
             return;
         } else {
             inInstrumentMethod.set(true);
         }
         
-        int tgtObjectId = System.identityHashCode(tgtObject);
-        int sourceObjectId = System.identityHashCode(object);
+        int receiverId = System.identityHashCode(receiver);
+        int valueId = (value == null) ? 0 : System.identityHashCode(value);
         long threadId = System.identityHashCode(Thread.currentThread());
         
         mx.lock();
@@ -207,16 +225,16 @@ public class ETProxy {
                 } else {
                     int currPtr = ptr.getAndIncrement();
                     eventTypeBuffer[currPtr] = 7;
-                    firstBuffer[currPtr] = tgtObjectId;
-                    secondBuffer[currPtr] = fieldId;
-                    thirdBuffer[currPtr] = sourceObjectId;
+                    firstBuffer[currPtr] = receiverId;    // Object with the field
+                    secondBuffer[currPtr] = fieldId;       // Field ID
+                    thirdBuffer[currPtr] = valueId;        // Value being assigned
                     timestampBuffer[currPtr] = timestamp;
                     threadIDBuffer[currPtr] = threadId;
                 }
             }
             
-            // Merlin: Track field update for object graph
-            MerlinTracker.onFieldUpdate(tgtObjectId, sourceObjectId, threadId);
+            // Merlin: Track field update for object graph (receiver -> value edge)
+            MerlinTracker.onFieldUpdate(receiverId, valueId, threadId);
         } finally {
             mx.unlock();
         }
@@ -227,7 +245,8 @@ public class ETProxy {
                                      int typeId,
                                      int allocSiteId )
     {
-        long timestamp = System.nanoTime();
+        // Use current logical time (no tick for array allocation)
+        long timestamp = logicalClock.get();
         if (inInstrumentMethod.get()) {
             return;
         } else {
@@ -278,7 +297,8 @@ public class ETProxy {
             return;
         }
         
-        long timestamp = System.nanoTime();
+        // Use current logical time (no tick for allocation)
+        long timestamp = logicalClock.get();
         
         // TODO: if (inInstrumentMethod.get()) {
         // TODO:     return;
@@ -337,7 +357,8 @@ public class ETProxy {
             return;
         }
         
-        long timestamp = System.nanoTime();
+        // Use current logical time (no tick for witness)
+        long timestamp = logicalClock.get();
         
         // TODO: if (inInstrumentMethod.get()) {
         // TODO:     return;
@@ -388,7 +409,8 @@ public class ETProxy {
         if (!atMain) {
             return;
         }
-        long timestamp = System.nanoTime();
+        // Use current logical time (no tick for invoke)
+        long timestamp = logicalClock.get();
         // TODO: if (inInstrumentMethod.get()) {
         // TODO:     return;
         // TODO: } else {
@@ -431,6 +453,9 @@ public class ETProxy {
 
     public static void flushBuffer()
     {
+        if (isShuttingDown || traceWriter == null) {
+            return;
+        }
         try {
             mx.lock();
             int bufSize = ptr.get();
@@ -492,14 +517,13 @@ public class ETProxy {
                                     threadIDBuffer[i] );
                         break;
                     case 7: // object update
-                        // TODO: Conflicting documention: 2018-1112
-                        // 7, targetObjectHash, fieldID, srcObjectHash, timestamp
-                        // U <obj-id> <new-tgt-obj-id> <field-id> <thread-id>
+                        // U <receiver-id> <value-id> <field-id> <thread-id>
+                        // For: receiver.field = value
                         traceWriter.println( "U " +
-                                    thirdBuffer[i] + " " + // objId
-                                    firstBuffer[i] + " " + // newTgtObjId
-                                    secondBuffer[i] + " " + // fieldId
-                                    threadIDBuffer[i] ); // threadId
+                                    firstBuffer[i] + " " +  // receiver (object with field)
+                                    thirdBuffer[i] + " " +  // value (being assigned)
+                                    secondBuffer[i] + " " +  // fieldId
+                                    threadIDBuffer[i] );     // threadId
                         break;
                     case 8: // witness with get field
                         // 8, aliveObjectHash, classID, timestamp
@@ -528,8 +552,11 @@ public class ETProxy {
             
             System.err.println("ET3 shutting down, finalizing trace...");
             
-            // Flush any remaining buffered events
+            // Flush any remaining buffered events BEFORE setting shutdown flag
             flushBuffer();
+            
+            // Now set shutdown flag to prevent further writes
+            isShuttingDown = true;
             
             // Merlin: Final death detection for all remaining objects
             // This may be slow for large benchmarks

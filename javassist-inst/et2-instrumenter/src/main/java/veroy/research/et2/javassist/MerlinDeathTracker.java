@@ -28,6 +28,9 @@ public class MerlinDeathTracker {
     // Track death events to be written
     private List<DeathRecord> deathRecords;
     
+    // Logical clock (increments at method entry/exit, same as ETProxy)
+    private long logicalClock;
+    
     // Configuration
     private boolean verbose;
     private PrintWriter outputWriter;
@@ -77,15 +80,17 @@ public class MerlinDeathTracker {
     private static class DeathRecord {
         int objectId;
         long threadId;
+        long timestamp;  // Logical time of death
         
-        DeathRecord(int objectId, long threadId) {
+        DeathRecord(int objectId, long threadId, long timestamp) {
             this.objectId = objectId;
             this.threadId = threadId;
+            this.timestamp = timestamp;
         }
         
         @Override
         public String toString() {
-            return "D " + objectId + " " + threadId;
+            return "D " + objectId + " " + threadId + " " + timestamp;
         }
     }
     
@@ -101,6 +106,7 @@ public class MerlinDeathTracker {
         this.staticRoots = new HashSet<>();
         this.threadCallStacks = new HashMap<>();
         this.deathRecords = new ArrayList<>();
+        this.logicalClock = 0;  // Start at 0, increments at M/E records
     }
     
     /**
@@ -130,8 +136,9 @@ public class MerlinDeathTracker {
                 // Process the trace record
                 processTraceRecord(line);
                 
-                // Perform reachability analysis periodically
-                if (lineNumber % 1000 == 0) {
+                // Perform reachability analysis at method exits (like online Merlin)
+                // This ensures accurate death timestamps at method boundaries
+                if (line.startsWith("E ")) {
                     performReachabilityAnalysis();
                 }
             }
@@ -279,6 +286,9 @@ public class MerlinDeathTracker {
     private void handleMethodEntry(String[] parts) {
         if (parts.length < 4) return;
         
+        // Logical clock ticks at method entry (same as ETProxy)
+        logicalClock++;
+        
         int methodId = Integer.parseInt(parts[1]);
         int receiverObjId = Integer.parseInt(parts[2]);
         long threadId = Long.parseLong(parts[3]);
@@ -302,6 +312,9 @@ public class MerlinDeathTracker {
      */
     private void handleMethodExit(String[] parts) {
         if (parts.length < 3) return;
+        
+        // Logical clock ticks at method exit (same as ETProxy)
+        logicalClock++;
         
         long threadId = Long.parseLong(parts[2]);
         
@@ -391,10 +404,11 @@ public class MerlinDeathTracker {
         deadObjects.removeAll(reachable);
         
         // Record deaths and remove from live set
+        // Use current logical time as death timestamp
         for (int objectId : deadObjects) {
             ObjectInfo obj = liveObjects.get(objectId);
             if (obj != null) {
-                deathRecords.add(new DeathRecord(objectId, obj.threadId));
+                deathRecords.add(new DeathRecord(objectId, obj.threadId, logicalClock));
                 liveObjects.remove(objectId);
                 
                 // Clean up graph structures

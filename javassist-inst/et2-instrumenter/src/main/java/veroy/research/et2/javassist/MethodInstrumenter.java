@@ -135,10 +135,22 @@ public class MethodInstrumenter {
                             public void edit(FieldAccess expr) throws CannotCompileException {
                                 try {
                                     final String fieldName = expr.getField().getName();
+                                    final String fieldClassName = expr.getField().getDeclaringClass().getName();
                                     if (expr.isWriter()) {
-                                        expr.replace( "{ veroy.research.et2.javassist.ETProxy.onPutField($1, $0, " + getFieldId(className, fieldName) + "); $_ = $proceed($$); }" );
+                                        // Only instrument object reference fields (not primitives)
+                                        try {
+                                            CtClass fieldType = expr.getField().getType();
+                                            if (!fieldType.isPrimitive()) {
+                                                // Use the field's declaring class, not the current class
+                                                int fieldId = getFieldId(fieldClassName, fieldName);
+                                                expr.replace( "{ veroy.research.et2.javassist.ETProxy.onPutField($0, $1, " + fieldId + "); $_ = $proceed($$); }" );
+                                            }
+                                        } catch (NotFoundException typeExc) {
+                                            System.err.println("Warning: Could not get type for field " + fieldClassName + "#" + fieldName);
+                                        }
                                     }
                                 } catch (NotFoundException exc) {
+                                    System.err.println("Warning: Field not found during instrumentation: " + exc.getMessage());
                                 }
                             }
                         }

@@ -1,0 +1,184 @@
+# Enhanced Makefile with mimalloc/jemalloc support
+
+CXX = g++
+CXXFLAGS = -std=c++11 -O3 -Wall -Wextra -I./src
+LDFLAGS = 
+
+# Detect OS
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+    LDFLAGS += -static
+endif
+
+# Directories
+SRC_DIR = src
+BUILD_DIR = build
+
+# Source files
+SOURCES = $(SRC_DIR)/TraceReplayerEnhanced.cpp
+HEADERS = $(SRC_DIR)/AllocatorBackend.h
+
+# Targets
+TARGET_STANDARD = $(BUILD_DIR)/trace_replayer
+TARGET_MIMALLOC = $(BUILD_DIR)/trace_replayer_mimalloc
+TARGET_JEMALLOC = $(BUILD_DIR)/trace_replayer_jemalloc
+
+# Allocator paths (can be overridden)
+MIMALLOC_DIR ?= /usr/local
+JEMALLOC_DIR ?= /usr/local
+
+# Default target
+all: standard
+
+# Create build directory
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+# Standard libc malloc version
+standard: $(TARGET_STANDARD)
+
+$(TARGET_STANDARD): $(SOURCES) $(HEADERS) | $(BUILD_DIR)
+	@echo "Building TraceReplayer with standard allocator..."
+	$(CXX) $(CXXFLAGS) -o $@ $(SOURCES) $(LDFLAGS)
+	@echo "Build complete: $@"
+	@ls -lh $@
+
+# mimalloc version
+mimalloc: $(TARGET_MIMALLOC)
+
+$(TARGET_MIMALLOC): $(SOURCES) $(HEADERS) | $(BUILD_DIR)
+	@echo "Building TraceReplayer with mimalloc..."
+	@if [ -f "$(MIMALLOC_DIR)/include/mimalloc.h" ]; then \
+		$(CXX) $(CXXFLAGS) -DUSE_MIMALLOC \
+			-I$(MIMALLOC_DIR)/include \
+			-o $@ $(SOURCES) \
+			-L$(MIMALLOC_DIR)/lib -lmimalloc $(LDFLAGS); \
+		echo "Build complete: $@"; \
+		ls -lh $@; \
+	else \
+		echo "Error: mimalloc not found at $(MIMALLOC_DIR)"; \
+		echo "Install with: brew install mimalloc (macOS) or apt install libmimalloc-dev (Linux)"; \
+		echo "Or set MIMALLOC_DIR to the installation directory"; \
+		exit 1; \
+	fi
+
+# jemalloc version
+jemalloc: $(TARGET_JEMALLOC)
+
+$(TARGET_JEMALLOC): $(SOURCES) $(HEADERS) | $(BUILD_DIR)
+	@echo "Building TraceReplayer with jemalloc..."
+	@if [ -f "$(JEMALLOC_DIR)/include/jemalloc/jemalloc.h" ]; then \
+		$(CXX) $(CXXFLAGS) -DUSE_JEMALLOC \
+			-I$(JEMALLOC_DIR)/include \
+			-o $@ $(SOURCES) \
+			-L$(JEMALLOC_DIR)/lib -ljemalloc $(LDFLAGS); \
+		echo "Build complete: $@"; \
+		ls -lh $@; \
+	else \
+		echo "Error: jemalloc not found at $(JEMALLOC_DIR)"; \
+		echo "Install with: brew install jemalloc (macOS) or apt install libjemalloc-dev (Linux)"; \
+		echo "Or set JEMALLOC_DIR to the installation directory"; \
+		exit 1; \
+	fi
+
+# Build all versions
+all-allocators: standard mimalloc jemalloc
+	@echo ""
+	@echo "All allocator versions built:"
+	@ls -lh $(BUILD_DIR)/trace_replayer*
+
+# Clean
+clean:
+	@echo "Cleaning build artifacts..."
+	rm -rf $(BUILD_DIR)
+	@echo "Clean complete"
+
+# Install allocators (convenience targets)
+install-mimalloc:
+	@echo "Installing mimalloc..."
+	@if [ "$(UNAME_S)" = "Darwin" ]; then \
+		brew install mimalloc; \
+	elif [ "$(UNAME_S)" = "Linux" ]; then \
+		if command -v apt-get >/dev/null 2>&1; then \
+			sudo apt-get install -y libmimalloc-dev; \
+		elif command -v yum >/dev/null 2>&1; then \
+			sudo yum install -y mimalloc-devel; \
+		else \
+			echo "Please install mimalloc manually"; \
+			exit 1; \
+		fi; \
+	fi
+
+install-jemalloc:
+	@echo "Installing jemalloc..."
+	@if [ "$(UNAME_S)" = "Darwin" ]; then \
+		brew install jemalloc; \
+	elif [ "$(UNAME_S)" = "Linux" ]; then \
+		if command -v apt-get >/dev/null 2>&1; then \
+			sudo apt-get install -y libjemalloc-dev; \
+		elif command -v yum >/dev/null 2>&1; then \
+			sudo yum install -y jemalloc-devel; \
+		else \
+			echo "Please install jemalloc manually"; \
+			exit 1; \
+		fi; \
+	fi
+
+# Test with a trace file
+test-standard: $(TARGET_STANDARD)
+	@echo "Testing standard allocator..."
+	@if [ -f "../trace_output/trace" ]; then \
+		$(TARGET_STANDARD) ../trace_output/trace explicit; \
+	else \
+		echo "No trace file found"; \
+	fi
+
+test-mimalloc: $(TARGET_MIMALLOC)
+	@echo "Testing mimalloc..."
+	@if [ -f "../trace_output/trace" ]; then \
+		$(TARGET_MIMALLOC) ../trace_output/trace explicit --allocator=mimalloc --allocator-stats; \
+	else \
+		echo "No trace file found"; \
+	fi
+
+test-jemalloc: $(TARGET_JEMALLOC)
+	@echo "Testing jemalloc..."
+	@if [ -f "../trace_output/trace" ]; then \
+		$(TARGET_JEMALLOC) ../trace_output/trace explicit --allocator=jemalloc --allocator-stats; \
+	else \
+		echo "No trace file found"; \
+	fi
+
+# Help
+help:
+	@echo "Enhanced Makefile with Allocator Support"
+	@echo ""
+	@echo "Targets:"
+	@echo "  all              - Build with standard allocator (default)"
+	@echo "  standard         - Build with standard libc malloc"
+	@echo "  mimalloc         - Build with mimalloc"
+	@echo "  jemalloc         - Build with jemalloc"
+	@echo "  all-allocators   - Build all versions"
+	@echo "  clean            - Remove build artifacts"
+	@echo ""
+	@echo "Install helpers:"
+	@echo "  install-mimalloc - Install mimalloc package"
+	@echo "  install-jemalloc - Install jemalloc package"
+	@echo ""
+	@echo "Test targets:"
+	@echo "  test-standard    - Test standard allocator"
+	@echo "  test-mimalloc    - Test mimalloc"
+	@echo "  test-jemalloc    - Test jemalloc"
+	@echo ""
+	@echo "Variables:"
+	@echo "  MIMALLOC_DIR     - Path to mimalloc installation (default: /usr/local)"
+	@echo "  JEMALLOC_DIR     - Path to jemalloc installation (default: /usr/local)"
+	@echo ""
+	@echo "Examples:"
+	@echo "  make standard"
+	@echo "  make mimalloc MIMALLOC_DIR=/opt/mimalloc"
+	@echo "  make all-allocators"
+	@echo "  make test-mimalloc"
+
+.PHONY: all standard mimalloc jemalloc all-allocators clean install-mimalloc install-jemalloc \
+        test-standard test-mimalloc test-jemalloc help

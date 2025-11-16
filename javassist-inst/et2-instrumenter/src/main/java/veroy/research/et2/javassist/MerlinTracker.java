@@ -142,7 +142,8 @@ public class MerlinTracker {
         allLive.removeAll(reachable);
         
         // Generate death records and clean up
-        long currentTime = System.nanoTime(); // Death time = method exit time
+        // Use logical clock time (not real time) as per ET paper
+        long currentTime = ETProxy.getLogicalTime();
         for (int deadObjId : allLive) {
             ObjectInfo obj = liveObjects.remove(deadObjId);
             if (obj != null) {
@@ -222,7 +223,8 @@ public class MerlinTracker {
         
         // All remaining objects are now dead
         List<DeathRecord> deaths = new ArrayList<>();
-        long shutdownTime = System.nanoTime(); // Program end time
+        // Use logical clock time (not real time) as per ET paper
+        long shutdownTime = ETProxy.getLogicalTime();
         for (ObjectInfo obj : liveObjects.values()) {
             deaths.add(new DeathRecord(obj.objectId, obj.threadId, shutdownTime));
         }
