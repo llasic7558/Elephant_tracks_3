@@ -42,8 +42,6 @@ bin/
 *.org
 *.notes
 *.list
-trace*
-*.trace
 *.j
 
 # cmake BUILD directory within source tree, if so desired.
