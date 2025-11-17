@@ -1,5 +1,3 @@
-using namespace std;
-
 #include "classinfo.hpp"
 #include "execution.hpp"
 #include "heap.hpp"
@@ -13,6 +11,7 @@ using namespace std;
 #include <set>
 #include <vector>
 
+using namespace std;
 
 extern HeapState Heap;
 extern ExecState Exec;

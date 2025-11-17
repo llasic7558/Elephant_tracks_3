@@ -551,7 +551,7 @@ class Object {
         bool isDead() const { return m_deadFlag; }
 
         bool isNewedObject() const { return m_newFlag; }
-        bool setNewedObject(bool flag) { m_newFlag = flag; }
+        void setNewedObject(bool flag) { m_newFlag = flag; }
 
         bool wasPointedAtByHeap() const { return m_pointed_by_heap; }
         void setPointedAtByHeap() { m_pointed_by_heap = true; }
@@ -627,7 +627,7 @@ class Object {
         // -----------------------------------------------------------------
 
         void setHeapReason( unsigned int t ) { m_reason = Reason::HEAP; m_last_action_time = t; }
-        Reason setReason( Reason r, unsigned int t ) { m_reason = r; m_last_action_time = t; }
+        void setReason( Reason r, unsigned int t ) { m_reason = r; m_last_action_time = t; }
         Reason getReason() const { return m_reason; }
         // Last action related
         unsigned int getLastActionTime() const {

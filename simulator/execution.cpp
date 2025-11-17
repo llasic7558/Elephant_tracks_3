@@ -395,6 +395,7 @@ LocalVarSet * Thread::TopLocalVarSet()
     else if (this->m_kind == ExecMode::StackOnly) {
         return ((!m_deadlocals.empty()) ? m_deadlocals.back() : NULL);
     }
+    return NULL;
 }
 
 // -- Get a stack trace

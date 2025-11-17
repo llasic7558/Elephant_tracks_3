@@ -1,5 +1,3 @@
-using namespace std;
-
 #include "classinfo.hpp"
 #include "execution.hpp"
 #include "heap.hpp"
@@ -21,6 +19,8 @@ using namespace std;
 #include <string>
 #include <utility>
 #include <vector>
+
+using namespace std;
 
 
 
@@ -150,6 +150,7 @@ bool verify_trace( std::deque< Record * > &trace )
         }
         recnum++;
     }
+    return true;
 }
 
 // Uses global:
@@ -180,6 +181,7 @@ unsigned int insert_death_records_into_trace( std::deque< Record * > &trace )
 
         trace.insert(reciter, drec);
     }
+    return 0;
 }
 
 bool verify_garbage_order( std::deque< Object * > &garbage )
