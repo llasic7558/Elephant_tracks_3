@@ -183,9 +183,20 @@ unsigned int insert_death_records_into_trace( std::deque< Record * > &trace )
         while (death_iter != deaths.end() && death_iter->first <= rec_time) {
             VTime_t death_time = death_iter->first;
             ObjectId_t object_id = death_iter->second;
+            
+            // Get object to extract size information
+            Object* obj = Heap.getObject(object_id);
+            unsigned int obj_size = 0;
+            string obj_type = "UNKNOWN";
+            if (obj != NULL) {
+                obj_size = obj->getSize();
+                obj_type = obj->getType();
+            }
+            
             DeathRecord *drec = new DeathRecord(object_id, 0, death_time);
             new_trace.push_back(drec);
-            cerr << "D " << object_id << " at time " << death_time << endl;
+            cerr << "D " << object_id << " at time " << death_time 
+                 << " (size: " << obj_size << " bytes, type: " << obj_type << ")" << endl;
             death_iter++;
         }
         
@@ -197,9 +208,20 @@ unsigned int insert_death_records_into_trace( std::deque< Record * > &trace )
     while (death_iter != deaths.end()) {
         VTime_t death_time = death_iter->first;
         ObjectId_t object_id = death_iter->second;
+        
+        // Get object to extract size information
+        Object* obj = Heap.getObject(object_id);
+        unsigned int obj_size = 0;
+        string obj_type = "UNKNOWN";
+        if (obj != NULL) {
+            obj_size = obj->getSize();
+            obj_type = obj->getType();
+        }
+        
         DeathRecord *drec = new DeathRecord(object_id, 0, death_time);
         new_trace.push_back(drec);
-        cerr << "D " << object_id << " at time " << death_time << " (end)" << endl;
+        cerr << "D " << object_id << " at time " << death_time 
+             << " (size: " << obj_size << " bytes, type: " << obj_type << ") [end]" << endl;
         death_iter++;
     }
     
