@@ -132,8 +132,23 @@ echo "  Original trace: $ORIG_COUNT records"
 echo "  Oracle trace: $FINAL_COUNT records ($DEATH_COUNT deaths added)"
 
 echo ""
-echo "=== Oracle Trace Created ===" 
-echo "Location: $TRACE_DIR/trace_with_deaths_oracle"
+echo "=== Building True Oracle Event Stream ==="
+./build_true_oracle.py \
+  "$TRACE_DIR/trace" \
+  "$TRACE_DIR/deaths_with_size.txt" \
+  "$TRACE_DIR/oracle_event_stream.txt"
+
 echo ""
-echo "Sample (first 20 lines with deaths):"
-grep -E '^(D |N |A )' "$TRACE_DIR/trace_with_deaths_oracle" | head -20
+echo "=== Converting to CSV ==="
+./oracle_to_csv.py \
+  "$TRACE_DIR/oracle_event_stream.txt" \
+  "$TRACE_DIR/oracle.csv"
+
+echo ""
+echo "=== Oracle Files Created ===" 
+echo "  1. trace_with_deaths_oracle   - Raw trace with death records"
+echo "  2. oracle_event_stream.txt    - Clean alloc/free event stream"
+echo "  3. oracle.csv                 - CSV format for analysis"
+echo ""
+echo "Sample event stream (first 15 events):"
+grep -v '^#' "$TRACE_DIR/oracle_event_stream.txt" | head -15
