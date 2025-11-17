@@ -69,8 +69,25 @@ def main(trace_file, deaths_file, output_file):
     deaths.sort(key=lambda x: x[1])  # Sort by time
     print(f"Parsed {len(deaths)} death records")
     
-    # Build event index to time mapping
-    event_to_time = build_event_to_time_map(trace_file)
+    # Map each event to its time using "increment AFTER" strategy
+    event_to_time = {}
+    current_time = 0
+    
+    with open(trace_file, 'r') as f:
+        for event_idx, line in enumerate(f):
+            line = line.strip()
+            if not line:
+                continue
+            
+            rec_type = line.split()[0]
+            
+            # Record time BEFORE incrementing (time at which this event occurs)
+            event_to_time[event_idx] = current_time
+            
+            # Then increment for M, N, A records
+            if rec_type in ['M', 'N', 'A']:
+                current_time += 1
+    
     print(f"Mapped {len(event_to_time)} events to time values")
     print(f"Time range: {min(event_to_time.values())} to {max(event_to_time.values())}")
     
