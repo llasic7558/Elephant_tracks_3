@@ -1,0 +1,14 @@
+# Oracle Event Stream
+# Format: t<event_index>: <event_type>(id=<obj_id>, size=<bytes>, site=<site_id>, thread=<thread_id>)
+# Total events: 8
+# Allocations: 4
+# Frees: 4
+
+t5: alloc(id=1789447862, size=24, site=62, thread=1950409828)
+t7: free(id=1789447862, size=24, site=62, thread=1950409828)
+t18: alloc(id=1031980531, size=40, site=80, thread=1950409828)
+t27: free(id=1031980531, size=40, site=80, thread=1950409828)
+t39: alloc(id=1490180672, size=32, site=81, thread=1950409828)
+t41: free(id=1490180672, size=32, site=81, thread=1950409828)
+t49: alloc(id=250075633, size=24, site=96, thread=1950409828)
+t55: free(id=250075633, size=24, site=96, thread=1950409828)

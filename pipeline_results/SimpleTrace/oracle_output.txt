@@ -1,0 +1,17 @@
+
+=== Oracle Statistics ===
+Total events: 32
+Allocations: 16
+Frees: 16
+Live objects (not freed): 0
+Total bytes allocated: 440
+Total bytes freed: 440
+Live bytes: 0
+
+Allocation sites: 7
+Most active sites:
+  Site 97: 9 allocations
+  Site 80: 2 allocations
+  Site 62: 1 allocations
+  Site 81: 1 allocations
+  Site 99: 1 allocations

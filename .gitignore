@@ -43,6 +43,7 @@ bin/
 *.notes
 *.list
 *.j
+dacapo_traces/
 
 # cmake BUILD directory within source tree, if so desired.
 # NOTE: A good alternative is to put the BUILD directory out of source.

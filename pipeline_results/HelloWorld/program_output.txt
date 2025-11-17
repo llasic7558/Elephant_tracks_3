@@ -1,0 +1,5 @@
+Loading Agent..
+Hello world.
+SHUTDOWN running.
+ET3 shutting down, finalizing trace...
+ET3 trace complete (offline Merlin mode - no death records yet)

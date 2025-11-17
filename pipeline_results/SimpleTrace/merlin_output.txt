@@ -1,0 +1,1 @@
+Death tracking complete. Output written to: /Users/luka/Desktop/Honors_Thesis/et2-java/pipeline_results/SimpleTrace/trace_with_deaths

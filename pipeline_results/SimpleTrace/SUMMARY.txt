@@ -1,0 +1,39 @@
+═══════════════════════════════════════════════════════════════════
+SimpleTrace - Pipeline Summary
+═══════════════════════════════════════════════════════════════════
+
+Runtime Trace (trace):
+  Total lines: 158
+  Method entries (M): 40
+  Method exits (E): 39
+  Allocations (N): 14
+  Arrays (A): 2
+  Field updates (U): 13
+  Witness/GetField (W): 50
+  Deaths (D): 0
+0 (should be 0 in offline mode)
+
+Offline Merlin Processing (trace_with_deaths):
+  Deaths added: 16
+  Total lines: 174
+
+After Reordering (trace_reordered):
+  Total lines: 174
+  Deaths in correct positions
+
+Oracle (oracle.csv):
+  Total events: 32
+  Format: CSV with timestamp, event_type, object_id, size, etc.
+
+Files Generated:
+  - trace                 : Runtime trace (no deaths)
+  - trace_with_deaths     : Deaths appended at end
+  - trace_reordered       : Deaths in correct temporal order
+  - oracle.txt            : Human-readable oracle
+  - oracle.csv            : Machine-readable oracle for gem5
+  - program_output.txt    : Program stdout/stderr
+  - merlin_output.txt     : MerlinDeathTracker output
+  - reorder_output.txt    : Reordering script output
+  - oracle_output.txt     : Oracle builder output and statistics
+
+═══════════════════════════════════════════════════════════════════

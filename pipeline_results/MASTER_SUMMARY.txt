@@ -1,0 +1,62 @@
+════════════════════════════════════════════════════════════════════════════
+ET3 Offline Pipeline - Master Summary
+Generated: Sun Nov 16 21:35:03 EST 2025
+════════════════════════════════════════════════════════════════════════════
+
+Configuration:
+  Agent JAR: /Users/luka/Desktop/Honors_Thesis/et2-java/javassist-inst/et2-instrumenter/target/instrumenter-1.0-SNAPSHOT-jar-with-dependencies.jar
+  Output Directory: /Users/luka/Desktop/Honors_Thesis/et2-java/pipeline_results
+  
+Tests Processed: 5
+Successful: 5
+Failed: 0
+
+Test Results:
+
+─────────────────────────────────────────────────────────────────────────
+SimpleTrace
+─────────────────────────────────────────────────────────────────────────
+  Allocations: 14 (N) + 2 (A) = 16
+  Deaths: 16
+  Oracle events: 32
+  ✓ Complete
+
+─────────────────────────────────────────────────────────────────────────
+HelloWorld
+─────────────────────────────────────────────────────────────────────────
+  Allocations: 3 (N) + 1 (A) = 4
+  Deaths: 4
+  Oracle events: 8
+  ✓ Complete
+
+─────────────────────────────────────────────────────────────────────────
+Methods
+─────────────────────────────────────────────────────────────────────────
+  Allocations: 3 (N) + 1 (A) = 4
+  Deaths: 4
+  Oracle events: 8
+  ✓ Complete
+
+─────────────────────────────────────────────────────────────────────────
+NewCall
+─────────────────────────────────────────────────────────────────────────
+  Allocations: 6 (N) + 1 (A) = 7
+  Deaths: 7
+  Oracle events: 14
+  ✓ Complete
+
+─────────────────────────────────────────────────────────────────────────
+LotsOfAllocs
+─────────────────────────────────────────────────────────────────────────
+  Allocations: 1004 (N) + 1 (A) = 1005
+  Deaths: 1005
+  Oracle events: 2010
+  ✓ Complete
+
+════════════════════════════════════════════════════════════════════════════
+
+Next Steps:
+  1. Review oracle CSV files for gem5 simulation
+  2. Use oracle.csv files as input to memory allocator simulation
+  3. Compare allocator performance across different test workloads
+

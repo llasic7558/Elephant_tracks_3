@@ -31,6 +31,10 @@ public class MerlinDeathTracker {
     // Logical clock (increments at method entry/exit, same as ETProxy)
     private long logicalClock;
     
+    // Witness tracking: Map object ID to its last witness (access) time
+    // This prevents marking objects dead before their last access
+    private Map<Integer, Long> lastWitnessTime;
+    
     // Configuration
     private boolean verbose;
     private PrintWriter outputWriter;
@@ -107,14 +111,79 @@ public class MerlinDeathTracker {
         this.threadCallStacks = new HashMap<>();
         this.deathRecords = new ArrayList<>();
         this.logicalClock = 0;  // Start at 0, increments at M/E records
+        this.lastWitnessTime = new HashMap<>();  // Track last access times
     }
     
     /**
      * Process a trace file and generate death records
+     * Uses two-pass algorithm to handle witness records correctly
      */
     public void processTrace(String inputTraceFile, String outputTraceFile) throws IOException {
+        if (verbose) {
+            System.err.println("MerlinDeathTracker: Starting two-pass processing...");
+        }
+        
+        // PASS 1: Collect all witness times and logical clock progression
+        buildWitnessMap(inputTraceFile);
+        
+        if (verbose) {
+            System.err.println("MerlinDeathTracker: Found witness records for " + lastWitnessTime.size() + " objects");
+        }
+        
+        // PASS 2: Process trace with witness-aware death detection
+        processTraceWithWitnesses(inputTraceFile, outputTraceFile);
+    }
+    
+    /**
+     * PASS 1: Build map of last witness times for each object
+     */
+    private void buildWitnessMap(String inputTraceFile) throws IOException {
+        long clock = 0;
+        
+        try (BufferedReader reader = new BufferedReader(new FileReader(inputTraceFile))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                
+                if (line.isEmpty() || line.startsWith("#")) {
+                    continue;
+                }
+                
+                String[] parts = line.split("\\s+");
+                if (parts.length == 0) continue;
+                
+                String recordType = parts[0];
+                
+                // Track logical clock (increments at M and E)
+                if (recordType.equals("M") || recordType.equals("E")) {
+                    clock++;
+                }
+                
+                // Record witness times
+                if (recordType.equals("W") && parts.length >= 2) {
+                    int objectId = Integer.parseInt(parts[1]);
+                    lastWitnessTime.put(objectId, clock);
+                }
+            }
+        }
+    }
+    
+    /**
+     * PASS 2: Process trace with witness-aware death detection
+     */
+    private void processTraceWithWitnesses(String inputTraceFile, String outputTraceFile) throws IOException {
         String line;
         int lineNumber = 0;
+        
+        // Reset state for second pass
+        this.logicalClock = 0;
+        this.liveObjects.clear();
+        this.objectGraph.clear();
+        this.reverseGraph.clear();
+        this.threadStacks.clear();
+        this.staticRoots.clear();
+        this.threadCallStacks.clear();
+        this.deathRecords.clear();
         
         try (BufferedReader reader = new BufferedReader(new FileReader(inputTraceFile));
              PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(outputTraceFile)))) {
@@ -136,8 +205,8 @@ public class MerlinDeathTracker {
                 // Process the trace record
                 processTraceRecord(line);
                 
-                // Perform reachability analysis at method exits (like online Merlin)
-                // This ensures accurate death timestamps at method boundaries
+                // Perform reachability analysis at method exits
+                // Now witness-aware: won't mark objects dead if they have future witnesses
                 if (line.startsWith("E ")) {
                     performReachabilityAnalysis();
                 }
@@ -190,6 +259,9 @@ public class MerlinDeathTracker {
                     break;
                 case "H": // Exception handled: H <method-id> <receiver-id> <exception-object-id> <thread-id>
                     handleExceptionHandled(parts);
+                    break;
+                case "W": // Witness (getfield): W <object-id> <class-id> <thread-id>
+                    handleWitness(parts);
                     break;
                 case "I": // Initial heap allocation
                 case "P": // Preexisting object
@@ -370,6 +442,22 @@ public class MerlinDeathTracker {
     }
     
     /**
+     * Handle witness records (getfield): W <object-id> <class-id> <thread-id>
+     * Witness records show that an object was accessed (read), proving liveness
+     */
+    private void handleWitness(String[] parts) {
+        if (parts.length < 4) return;
+        
+        int objectId = Integer.parseInt(parts[1]);
+        // int classId = Integer.parseInt(parts[2]); // Not currently used
+        long threadId = Long.parseLong(parts[3]);
+        
+        // If object is accessed, it's still alive - add to current stack frame
+        // This reinforces reachability for objects being read
+        addToCurrentStackFrame(threadId, objectId);
+    }
+    
+    /**
      * Handle special allocations (I, P, V)
      */
     private void handleSpecialAllocation(String[] parts) {
@@ -395,6 +483,8 @@ public class MerlinDeathTracker {
     /**
      * Perform reachability analysis using the Merlin algorithm
      * Objects that are not reachable from roots are considered dead
+     * 
+     * WITNESS-AWARE: Won't mark objects dead if they have future witness records
      */
     private void performReachabilityAnalysis() {
         Set<Integer> reachable = computeReachableObjects();
@@ -408,6 +498,18 @@ public class MerlinDeathTracker {
         for (int objectId : deadObjects) {
             ObjectInfo obj = liveObjects.get(objectId);
             if (obj != null) {
+                // CHECK: Does this object have a future witness record?
+                Long lastWitness = lastWitnessTime.get(objectId);
+                if (lastWitness != null && lastWitness > logicalClock) {
+                    // Object will be accessed in the future - DON'T mark it dead yet
+                    if (verbose) {
+                        System.err.println("Delaying death of object " + objectId + 
+                                         " (current=" + logicalClock + ", last_witness=" + lastWitness + ")");
+                    }
+                    continue;
+                }
+                
+                // Safe to mark as dead
                 deathRecords.add(new DeathRecord(objectId, obj.threadId, logicalClock));
                 liveObjects.remove(objectId);
                 

@@ -105,8 +105,8 @@ public class ETProxy {
                 threadIDBuffer[currPtr] = threadId;
             }
             
-            // Merlin: Track method entry for reachability analysis
-            MerlinTracker.onMethodEntry(methodId, receiverHash, threadId);
+            // Merlin: DISABLED - Using offline mode (MerlinDeathTracker.java) per ET2 design
+            // MerlinTracker.onMethodEntry(methodId, receiverHash, threadId);
         } finally {
             mx.unlock();
         }
@@ -139,20 +139,16 @@ public class ETProxy {
                 threadIDBuffer[currPtr] = threadId;
             }
             
-            // CRITICAL: Flush buffer BEFORE detecting deaths
-            // This ensures E record is written before D records
+            // CRITICAL: Flush buffer to write pending events
             flushBuffer();
             
-            // Merlin: Track method exit and check for deaths
-            // Deaths are detected at method boundaries for accuracy
-            java.util.List<MerlinTracker.DeathRecord> deaths = MerlinTracker.onMethodExit(methodId, threadId);
-            
-            // Write death records immediately after the method exit
-            if (!isShuttingDown && traceWriter != null) {
-                for (MerlinTracker.DeathRecord death : deaths) {
-                    traceWriter.println(death.toString());
-                }
-            }
+            // Merlin: DISABLED - Using offline mode (MerlinDeathTracker.java) per ET2 design
+            // java.util.List<MerlinTracker.DeathRecord> deaths = MerlinTracker.onMethodExit(methodId, threadId);
+            // if (!isShuttingDown && traceWriter != null) {
+            //     for (MerlinTracker.DeathRecord death : deaths) {
+            //         traceWriter.println(death.toString());
+            //     }
+            // }
         } finally {
             mx.unlock();
         }
@@ -188,8 +184,8 @@ public class ETProxy {
                 threadIDBuffer[currPtr] = threadId;
             }
             
-            // Merlin: Track object allocation
-            MerlinTracker.onObjectAlloc(objectId, threadId, timestamp);
+            // Merlin: DISABLED - Using offline mode (MerlinDeathTracker.java) per ET2 design
+            // MerlinTracker.onObjectAlloc(objectId, threadId, timestamp);
         } finally {
             mx.unlock();
         }
@@ -233,8 +229,50 @@ public class ETProxy {
                 }
             }
             
-            // Merlin: Track field update for object graph (receiver -> value edge)
-            MerlinTracker.onFieldUpdate(receiverId, valueId, threadId);
+            // Merlin: DISABLED - Using offline mode (MerlinDeathTracker.java) per ET2 design
+            // MerlinTracker.onFieldUpdate(receiverId, valueId, threadId);
+        } finally {
+            mx.unlock();
+        }
+        inInstrumentMethod.set(false);
+    }
+
+    /**
+     * Track field reads (getfield operations) - generates W (witness) records
+     * Format: W <object-id> <class-id> <thread-id>
+     * This shows that an object was accessed (still alive)
+     */
+    public static void onGetField(Object obj, int classId) {
+        // Use current logical time (no tick for field read)
+        long timestamp = logicalClock.get();
+        if (inInstrumentMethod.get()) {
+            return;
+        } else {
+            inInstrumentMethod.set(true);
+        }
+        
+        if (obj == null) {
+            inInstrumentMethod.set(false);
+            return; // Skip null objects
+        }
+        
+        int objectId = System.identityHashCode(obj);
+        long threadId = System.identityHashCode(Thread.currentThread());
+        
+        mx.lock();
+        try {
+            synchronized(ptr) {
+                if (ptr.get() >= BUFMAX) {
+                    flushBuffer();
+                    assert(ptr.get() == 0);
+                }
+                int currPtr = ptr.getAndIncrement();
+                eventTypeBuffer[currPtr] = 8; // Case 8: witness with get field
+                firstBuffer[currPtr] = objectId;      // Object being accessed
+                secondBuffer[currPtr] = classId;      // Class ID
+                timestampBuffer[currPtr] = timestamp;
+                threadIDBuffer[currPtr] = threadId;
+            }
         } finally {
             mx.unlock();
         }
@@ -279,177 +317,13 @@ public class ETProxy {
                 }
             }
             
-            // Merlin: Track array allocation
-            MerlinTracker.onObjectAlloc(objectId, threadId, timestamp);
+            // Merlin: DISABLED - Using offline mode (MerlinDeathTracker.java) per ET2 design
+            // MerlinTracker.onObjectAlloc(objectId, threadId, timestamp);
         } finally {
             mx.unlock();
         }
         inInstrumentMethod.set(false);
     }
-
-    /*
-    public static void onMultiArrayAlloc( int dims,
-                                          int allocdClassID,
-                                          Object[] allocdArray,
-                                          int allocSiteID )
-    {
-        if (!atMain) {
-            return;
-        }
-        
-        // Use current logical time (no tick for allocation)
-        long timestamp = logicalClock.get();
-        
-        // TODO: if (inInstrumentMethod.get()) {
-        // TODO:     return;
-        // TODO: } else {
-        // TODO:     inInstrumentMethod.set(true);
-        // TODO: }
-
-        mx.lock();
-
-        try {
-            while (true) {
-                if (ptr.get() < BUFMAX) {
-                    // wait on ptr to prevent overflow
-                    int currPtr;
-                    synchronized(ptr) {
-                        currPtr = ptr.getAndIncrement();
-                    }
-                    firstBuffer[currPtr] = System.identityHashCode(allocdArray);
-                    eventTypeBuffer[currPtr] = 6;
-                    secondBuffer[currPtr] = allocdClassID;
-                    thirdBuffer[currPtr] = allocdArray.length;
-                    // TODO: fourthBuffer[currPtr] = allocSiteID;
-                    fifthBuffer[currPtr] = getObjectSize(allocdArray);
-                    timestampBuffer[currPtr] = timestamp;
-                    threadIDBuffer[currPtr] = System.identityHashCode(Thread.currentThread());
-
-                    if (dims > 2) {
-                        for (int i = 0; i < allocdArray.length; ++i) {
-                            onMultiArrayAlloc(dims - 1, allocdClassID, (Object[]) allocdArray[i], allocSiteID);
-                        }
-                    } else { // dims == 2
-                        for (int i = 0; i < allocdArray.length; ++i) {
-                            onArrayAlloc(allocdClassID, 0, allocdArray[i], allocSiteID);
-                        }
-                    }
-                    break;
-                } else {
-                    synchronized(ptr) {
-                        if (ptr.get() >= BUFMAX) {
-                            flushBuffer();
-                        }
-                    }
-                }
-            }
-        } finally {
-            mx.unlock();
-        }
-        
-        // TODO: inInstrumentMethod.set(false);
-    }
-
-    public static void witnessObjectAlive( Object aliveObject,
-                                           int classID )
-    {
-        if (!atMain) {
-            return;
-        }
-        
-        // Use current logical time (no tick for witness)
-        long timestamp = logicalClock.get();
-        
-        // TODO: if (inInstrumentMethod.get()) {
-        // TODO:     return;
-        // TODO: } else {
-        // TODO:     inInstrumentMethod.set(true);
-        // TODO: }
-
-        mx.lock();
-
-        try {
-            while (true) {
-                if (ptr.get() < BUFMAX) {
-                    // wait on ptr to prevent overflow
-                    int currPtr;
-                    synchronized(ptr) {
-                        currPtr = ptr.getAndIncrement();
-                    }
-
-                    // System.err.println("Seems like problem is here...");
-                    // System.err.println("Class being instrumented here (ID): " + classID);
-
-                    firstBuffer[currPtr] = System.identityHashCode(aliveObject);
-
-                    // System.err.println("gets here");
-                    eventTypeBuffer[currPtr] = 8;
-                    secondBuffer[currPtr] = classID;
-                    timestampBuffer[currPtr] = timestamp;
-
-                    threadIDBuffer[currPtr] = System.identityHashCode(Thread.currentThread());
-                    break;
-                } else {
-                    synchronized(ptr) {
-                        if (ptr.get() >= BUFMAX) {
-                            flushBuffer();
-                        }
-                    }
-                }
-            }
-        } finally {
-            mx.unlock();
-        }
-        
-        // TODO: inInstrumentMethod.set(false);
-    }
-    
-    public static void onInvokeMethod(Object allocdObject, int allocdClassID, int allocSiteID)
-    {
-        if (!atMain) {
-            return;
-        }
-        // Use current logical time (no tick for invoke)
-        long timestamp = logicalClock.get();
-        // TODO: if (inInstrumentMethod.get()) {
-        // TODO:     return;
-        // TODO: } else {
-        // TODO:     inInstrumentMethod.set(true);
-        // TODO: }
-        mx.lock();
-        try {
-            while (true) {
-                if (ptr.get() < BUFMAX) {
-                    // wait on ptr to prevent overflow
-                    int currPtr;
-                    synchronized(ptr) {
-                        currPtr = ptr.getAndIncrement();
-                    }
-                    firstBuffer[currPtr] = System.identityHashCode(allocdObject);
-                    eventTypeBuffer[currPtr] = 3;
-                    secondBuffer[currPtr] = allocdClassID;
-                    thirdBuffer[currPtr] = allocSiteID;
-                    // I hope no one ever wants a 2 gigabyte (shallow size!) object
-                    // some problem here...
-                    // System.err.println("Class ID: " + allocdClassID);
-                    fourthBuffer[currPtr] = (int) getObjectSize(allocdObject);
-                    timestampBuffer[currPtr] = timestamp;
-                    threadIDBuffer[currPtr] = System.identityHashCode(Thread.currentThread());
-                    break;
-                } else {
-                    synchronized(ptr) {
-                        if (ptr.get() >= BUFMAX) {
-                            flushBuffer();
-                        }
-                    }
-                }
-            }
-        } finally {
-            mx.unlock();
-        }
-        // TODO: inInstrumentMethod.set(false);
-    }
-    */
 
     public static void flushBuffer()
     {
@@ -468,10 +342,7 @@ public class ETProxy {
                                     firstBuffer[i] + " " +
                                     secondBuffer[i] + " " +
                                     threadIDBuffer[i] );
-                        // TODO: et2Logger.info( "M " +
-                        // TODO:                 firstBuffer[i] + " " +
-                        // TODO:                 secondBuffer[i] + " " +
-                        // TODO:                 threadIDBuffer[i] );
+
                         break;
                     case 2: // method exit
                         // E <method-id> <thread-id>
@@ -558,18 +429,15 @@ public class ETProxy {
             // Now set shutdown flag to prevent further writes
             isShuttingDown = true;
             
-            // Merlin: Final death detection for all remaining objects
-            // This may be slow for large benchmarks
-            long startTime = System.currentTimeMillis();
-            java.util.List<MerlinTracker.DeathRecord> deaths = MerlinTracker.onShutdown();
-            long elapsed = System.currentTimeMillis() - startTime;
-            
-            System.err.println("Merlin final analysis: " + deaths.size() + " deaths in " + elapsed + "ms");
-            
-            // Write final death records
-            for (MerlinTracker.DeathRecord death : deaths) {
-                traceWriter.println(death.toString());
-            }
+            // Merlin: DISABLED - Using offline mode (MerlinDeathTracker.java) per ET2 design
+            // Deaths will be added by post-processing with MerlinDeathTracker.java
+            // long startTime = System.currentTimeMillis();
+            // java.util.List<MerlinTracker.DeathRecord> deaths = MerlinTracker.onShutdown();
+            // long elapsed = System.currentTimeMillis() - startTime;
+            // System.err.println("Merlin final analysis: " + deaths.size() + " deaths in " + elapsed + "ms");
+            // for (MerlinTracker.DeathRecord death : deaths) {
+            //     traceWriter.println(death.toString());
+            // }
             
             // Close trace writer
             if (traceWriter != null) {
@@ -577,7 +445,7 @@ public class ETProxy {
                 traceWriter.close();
             }
             
-            System.err.println("ET3 trace complete with Merlin death tracking");
+            System.err.println("ET3 trace complete (offline Merlin mode - no death records yet)");
         } catch (Exception e) {
             System.err.println("Error during ET3 shutdown: " + e.getMessage());
             e.printStackTrace();

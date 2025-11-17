@@ -1,0 +1,1 @@
+Successfully reordered trace: /Users/luka/Desktop/Honors_Thesis/et2-java/pipeline_results/Methods/trace_reordered

@@ -131,19 +131,32 @@ public class MethodInstrumenter {
                                 }
                             }
 
-                            // Instrument field updates:
+                            // Instrument field updates and reads:
                             public void edit(FieldAccess expr) throws CannotCompileException {
                                 try {
                                     final String fieldName = expr.getField().getName();
                                     final String fieldClassName = expr.getField().getDeclaringClass().getName();
                                     if (expr.isWriter()) {
-                                        // Only instrument object reference fields (not primitives)
+                                        // PUTFIELD: Instrument object reference field writes (not primitives)
                                         try {
                                             CtClass fieldType = expr.getField().getType();
                                             if (!fieldType.isPrimitive()) {
                                                 // Use the field's declaring class, not the current class
                                                 int fieldId = getFieldId(fieldClassName, fieldName);
                                                 expr.replace( "{ veroy.research.et2.javassist.ETProxy.onPutField($0, $1, " + fieldId + "); $_ = $proceed($$); }" );
+                                            }
+                                        } catch (NotFoundException typeExc) {
+                                            System.err.println("Warning: Could not get type for field " + fieldClassName + "#" + fieldName);
+                                        }
+                                    } else {
+                                        // GETFIELD: Instrument object reference field reads to generate witness (W) records
+                                        try {
+                                            CtClass fieldType = expr.getField().getType();
+                                            if (!fieldType.isPrimitive() && !expr.isStatic()) {
+                                                // Only instrument instance field reads (not static fields)
+                                                int classId = getClassId(fieldClassName);
+                                                // $0 is the receiver object (the object whose field is being read)
+                                                expr.replace( "{ veroy.research.et2.javassist.ETProxy.onGetField($0, " + classId + "); $_ = $proceed($$); }" );
                                             }
                                         } catch (NotFoundException typeExc) {
                                             System.err.println("Warning: Could not get type for field " + fieldClassName + "#" + fieldName);

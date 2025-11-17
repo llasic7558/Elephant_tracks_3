@@ -1,0 +1,7 @@
+Loading Agent..
+Starting SimpleTrace test...
+List values: 1 2 3 4 5 6 7 8 9 10 
+Test completed successfully!
+SHUTDOWN running.
+ET3 shutting down, finalizing trace...
+ET3 trace complete (offline Merlin mode - no death records yet)
