@@ -18,6 +18,12 @@ public class ETProxy {
     private static final InstrumentFlag inInstrumentMethod = new InstrumentFlag();
     private static ReentrantLock mx = new ReentrantLock();
     private static volatile boolean isShuttingDown = false;
+    
+    // Configuration: Disable W (witness) and U (update) records for simulator compatibility
+    // Set to true to generate minimal traces (only M, E, N, A, D records)
+    private static final boolean SIMULATOR_MODE = Boolean.getBoolean("et3.simulator.mode");
+    private static final boolean DISABLE_WITNESS_RECORDS = SIMULATOR_MODE || Boolean.getBoolean("et3.disable.witness");
+    private static final boolean DISABLE_UPDATE_RECORDS = SIMULATOR_MODE || Boolean.getBoolean("et3.disable.update");
 
     // TODO: private static Logger et2Logger = Logger.getLogger(ETProxy.class);
 
@@ -200,6 +206,11 @@ public class ETProxy {
     //       U  <receiver-id> <value-id> <field-id> <thread-id>
     public static void onPutField(Object receiver, Object value, int fieldId)
     {
+        // Skip if disabled for simulator mode
+        if (DISABLE_UPDATE_RECORDS) {
+            return;
+        }
+        
         // Use current logical time (no tick for field update)
         long timestamp = logicalClock.get();
         if (inInstrumentMethod.get()) {
@@ -243,6 +254,11 @@ public class ETProxy {
      * This shows that an object was accessed (still alive)
      */
     public static void onGetField(Object obj, int classId) {
+        // Skip if disabled for simulator mode
+        if (DISABLE_WITNESS_RECORDS) {
+            return;
+        }
+        
         // Use current logical time (no tick for field read)
         long timestamp = logicalClock.get();
         if (inInstrumentMethod.get()) {

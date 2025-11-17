@@ -157,31 +157,44 @@ bool verify_trace( std::deque< Record * > &trace )
 //     * Heap
 unsigned int insert_death_records_into_trace( std::deque< Record * > &trace )
 {
-    auto reciter = trace.begin(); 
-    VTime_t rec_timestamp = 0;
-    VTime_t prev_timestamp = 0;
-    for ( auto iter = Heap.begin();
-          iter != Heap.end();
-          iter++ ) {
+    // Collect all objects and their death times
+    std::vector< std::pair<VTime_t, std::pair<ObjectId_t, TypeId_t>> > deaths;
+    
+    for ( auto iter = Heap.begin(); iter != Heap.end(); iter++ ) {
         ObjectId_t object_id = iter->first;
         Object *obj = iter->second;
-        VTime_t ettime = obj->getLastTimestamp();
+        VTime_t death_time = obj->getDeathTime();  // Use computed death time
+        TypeId_t type_id = obj->getTypeId();
+        deaths.push_back(std::make_pair(death_time, std::make_pair(object_id, type_id)));
+    }
+    
+    // Sort deaths by time (ascending order for chronological insertion)
+    std::sort(deaths.begin(), deaths.end());
+    
+    // Insert death records in chronological order
+    auto reciter = trace.begin();
+    VTime_t rec_timestamp = 0;
+    
+    for (const auto& death : deaths) {
+        VTime_t death_time = death.first;
+        ObjectId_t object_id = death.second.first;
+        TypeId_t type_id = death.second.second;
+        
+        // Find insertion point: after the last record before or at death_time
         while (reciter != trace.end()) {
-            prev_timestamp = rec_timestamp;
             rec_timestamp = (*reciter)->get_ET_timestamp();
-            cerr << "prev: " << prev_timestamp << "    rec: " << rec_timestamp << endl;
-            if (rec_timestamp > ettime) {
+            if (rec_timestamp > death_time) {
                 break;
             }
             reciter++;
         }
-        DeathRecord *drec = new DeathRecord( object_id,
-                                             0, // TODO: type_id
-                                             prev_timestamp );
-
+        
+        // Create death record with actual death time
+        DeathRecord *drec = new DeathRecord(object_id, type_id, death_time);
         trace.insert(reciter, drec);
     }
-    return 0;
+    
+    return deaths.size();
 }
 
 bool verify_garbage_order( std::deque< Object * > &garbage )

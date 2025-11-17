@@ -1,0 +1,79 @@
+# Makefile for Oracle Replay Simulator
+# Follows the original paper's approach for memory simulation
+
+CXX = g++
+CXXFLAGS = -std=c++11 -Wall -Wextra -O2
+LDFLAGS = 
+
+# Directories
+SRC_DIR = src
+BUILD_DIR = build
+BIN_DIR = $(BUILD_DIR)/bin
+
+# Source files
+SOURCES = $(SRC_DIR)/OracleReplayer.cpp \
+          $(SRC_DIR)/oracle_replay_main.cpp
+
+# Object files
+OBJECTS = $(BUILD_DIR)/OracleReplayer.o \
+          $(BUILD_DIR)/oracle_replay_main.o
+
+# Executable
+TARGET = $(BIN_DIR)/oracle_replay
+
+# Default target
+all: directories $(TARGET)
+
+# Create directories
+directories:
+	@mkdir -p $(BUILD_DIR)
+	@mkdir -p $(BIN_DIR)
+
+# Build executable
+$(TARGET): $(OBJECTS)
+	@echo "Linking $@..."
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJECTS) $(LDFLAGS)
+	@echo "Build complete: $@"
+
+# Compile source files
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp $(SRC_DIR)/OracleReplayer.h
+	@echo "Compiling $<..."
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Clean build artifacts
+clean:
+	@echo "Cleaning build artifacts..."
+	rm -rf $(BUILD_DIR)
+
+# Run with example oracle
+test: $(TARGET)
+	@echo "Running test simulation..."
+	$(TARGET) --oracle ../pipeline_results/SimpleTrace/oracle.csv --verbose
+
+# Run with LotsOfAllocs
+test-large: $(TARGET)
+	@echo "Running large simulation..."
+	$(TARGET) --oracle ../pipeline_results/LotsOfAllocs/oracle.csv --verbose
+
+# Install (copy to convenient location)
+install: $(TARGET)
+	@echo "Installing to /usr/local/bin..."
+	sudo cp $(TARGET) /usr/local/bin/
+	@echo "Installed: /usr/local/bin/oracle_replay"
+
+# Help
+help:
+	@echo "Oracle Replay Simulator - Makefile targets:"
+	@echo "  all          Build the oracle replay simulator (default)"
+	@echo "  clean        Remove build artifacts"
+	@echo "  test         Run test with SimpleTrace oracle"
+	@echo "  test-large   Run test with LotsOfAllocs oracle"
+	@echo "  install      Install to /usr/local/bin"
+	@echo "  help         Show this help message"
+	@echo ""
+	@echo "Example usage:"
+	@echo "  make"
+	@echo "  make test"
+	@echo "  ./$(TARGET) --oracle path/to/oracle.csv --verbose"
+
+.PHONY: all directories clean test test-large install help

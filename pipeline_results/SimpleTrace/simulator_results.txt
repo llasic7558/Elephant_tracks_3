@@ -1,0 +1,224 @@
+---------------[ START ]-----------------------------------------------------------
+Main class: SimpleTrace
+Main function: main
+Read names file...
+Start trace...
+-- No alloc event: 2
+-- No alloc event: 4
+-- No alloc event: 3
+-- No alloc event: 8
+prev: 0    rec: 1
+prev: 1    rec: 2
+prev: 2    rec: 3
+prev: 3    rec: 3
+prev: 3    rec: 4
+prev: 4    rec: 4
+prev: 4    rec: 5
+prev: 5    rec: 6
+prev: 6    rec: 7
+prev: 7    rec: 8
+prev: 8    rec: 8
+prev: 8    rec: 9
+prev: 9    rec: 10
+prev: 10    rec: 10
+prev: 10    rec: 11
+prev: 11    rec: 11
+prev: 11    rec: 12
+prev: 12    rec: 13
+prev: 13    rec: 13
+prev: 13    rec: 14
+prev: 14    rec: 14
+prev: 14    rec: 15
+prev: 15    rec: 15
+prev: 15    rec: 16
+prev: 16    rec: 17
+prev: 17    rec: 18
+prev: 18    rec: 18
+prev: 18    rec: 18
+prev: 18    rec: 19
+prev: 19    rec: 19
+prev: 19    rec: 20
+prev: 20    rec: 20
+prev: 20    rec: 21
+prev: 21    rec: 21
+prev: 21    rec: 22
+prev: 22    rec: 22
+prev: 22    rec: 22
+prev: 22    rec: 23
+prev: 23    rec: 24
+prev: 24    rec: 24
+prev: 24    rec: 25
+prev: 25    rec: 26
+prev: 26    rec: 26
+prev: 26    rec: 28
+prev: 28    rec: 28
+prev: 28    rec: 29
+prev: 29    rec: 29
+prev: 29    rec: 29
+prev: 29    rec: 29
+prev: 29    rec: 29
+prev: 29    rec: 30
+prev: 30    rec: 30
+prev: 30    rec: 31
+prev: 31    rec: 32
+prev: 32    rec: 32
+prev: 32    rec: 33
+prev: 33    rec: 33
+prev: 33    rec: 34
+prev: 34    rec: 35
+prev: 35    rec: 35
+prev: 35    rec: 36
+prev: 36    rec: 36
+prev: 36    rec: 37
+prev: 37    rec: 37
+prev: 37    rec: 37
+prev: 37    rec: 38
+prev: 38    rec: 40
+prev: 40    rec: 40
+prev: 40    rec: 42
+prev: 42    rec: 42
+prev: 42    rec: 44
+prev: 44    rec: 44
+prev: 44    rec: 46
+prev: 46    rec: 46
+prev: 46    rec: 48
+prev: 48    rec: 48
+prev: 48    rec: 50
+prev: 50    rec: 50
+prev: 50    rec: 52
+prev: 52    rec: 52
+prev: 52    rec: 54
+prev: 54    rec: 54
+prev: 54    rec: 56
+prev: 56    rec: 56
+prev: 56    rec: 57
+prev: 57    rec: 58
+prev: 58    rec: 58
+prev: 58    rec: 59
+prev: 59    rec: 60
+prev: 60    rec: 60
+prev: 60    rec: 60
+prev: 60    rec: 61
+prev: 61    rec: 61
+prev: 61    rec: 62
+prev: 62    rec: 62
+prev: 62    rec: 63
+prev: 63    rec: 64
+prev: 64    rec: 64
+prev: 64    rec: 64
+prev: 64    rec: 65
+prev: 65    rec: 65
+prev: 65    rec: 66
+prev: 66    rec: 66
+prev: 66    rec: 67
+prev: 67    rec: 68
+prev: 68    rec: 68
+prev: 68    rec: 68
+prev: 68    rec: 69
+apply_merlin: 
+35 objects in garbage.
+prev: 0    rec: 69
+prev: 69    rec: 68
+ERROR at record number: 1
+prev: 68    rec: 65
+ERROR at record number: 2
+prev: 65    rec: 61
+ERROR at record number: 3
+prev: 61    rec: 56
+ERROR at record number: 4
+prev: 56    rec: 56
+prev: 56    rec: 56
+prev: 56    rec: 54
+ERROR at record number: 7
+prev: 54    rec: 54
+prev: 54    rec: 52
+ERROR at record number: 9
+prev: 52    rec: 50
+ERROR at record number: 10
+prev: 50    rec: 48
+ERROR at record number: 11
+prev: 48    rec: 46
+ERROR at record number: 12
+prev: 46    rec: 44
+ERROR at record number: 13
+prev: 44    rec: 42
+ERROR at record number: 14
+prev: 42    rec: 40
+ERROR at record number: 15
+prev: 40    rec: 37
+ERROR at record number: 16
+prev: 37    rec: 36
+ERROR at record number: 17
+prev: 36    rec: 35
+ERROR at record number: 18
+prev: 35    rec: 33
+ERROR at record number: 19
+prev: 33    rec: 26
+ERROR at record number: 20
+prev: 26    rec: 23
+ERROR at record number: 21
+prev: 23    rec: 22
+ERROR at record number: 22
+prev: 22    rec: 21
+ERROR at record number: 23
+prev: 21    rec: 20
+ERROR at record number: 24
+prev: 20    rec: 18
+ERROR at record number: 25
+prev: 18    rec: 18
+prev: 18    rec: 17
+ERROR at record number: 27
+prev: 17    rec: 15
+ERROR at record number: 28
+prev: 15    rec: 14
+ERROR at record number: 29
+prev: 14    rec: 13
+ERROR at record number: 30
+prev: 13    rec: 11
+ERROR at record number: 31
+prev: 11    rec: 8
+ERROR at record number: 32
+prev: 8    rec: 4
+ERROR at record number: 33
+prev: 4    rec: 4
+...................................
+prev: 0    rec: 1
+prev: 1    rec: 2
+prev: 2    rec: 3
+prev: 3    rec: 3
+prev: 3    rec: 4
+prev: 4    rec: 4
+prev: 4    rec: 5
+prev: 5    rec: 6
+prev: 6    rec: 7
+prev: 7    rec: 8
+prev: 8    rec: 8
+prev: 8    rec: 9
+prev: 9    rec: 9
+prev: 9    rec: 10
+prev: 10    rec: 10
+prev: 10    rec: 11
+prev: 11    rec: 11
+prev: 11    rec: 12
+prev: 12    rec: 13
+prev: 13    rec: 13
+prev: 13    rec: 14
+prev: 14    rec: 14
+prev: 14    rec: 15
+prev: 15    rec: 15
+prev: 15    rec: 16
+prev: 16    rec: 17
+prev: 17    rec: 18
+prev: 18    rec: 18
+prev: 18    rec: 18
+prev: 18    rec: 19
+prev: 19    rec: 19
+prev: 19    rec: 20
+prev: 20    rec: 20
+prev: 20    rec: 21
+prev: 21    rec: 21
+prev: 21    rec: 22
+prev: 22    rec: 22
+prev: 22    rec: 22
+prev: 22    rec: 23
+prev: 23    rec: 24
