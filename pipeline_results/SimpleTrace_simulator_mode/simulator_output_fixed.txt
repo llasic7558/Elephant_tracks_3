@@ -1,0 +1,197 @@
+---------------[ START ]-----------------------------------------------------------
+Main class: SimpleTrace
+Main function: main
+Read names file...
+Start trace...
+prev: 0    rec: 1
+prev: 1    rec: 2
+prev: 2    rec: 2
+prev: 2    rec: 2
+prev: 2    rec: 3
+prev: 3    rec: 4
+prev: 4    rec: 5
+prev: 5    rec: 5
+prev: 5    rec: 6
+prev: 6    rec: 7
+prev: 7    rec: 7
+prev: 7    rec: 8
+prev: 8    rec: 8
+prev: 8    rec: 9
+prev: 9    rec: 10
+prev: 10    rec: 10
+prev: 10    rec: 11
+prev: 11    rec: 11
+prev: 11    rec: 12
+prev: 12    rec: 12
+prev: 12    rec: 13
+prev: 13    rec: 14
+prev: 14    rec: 15
+prev: 15    rec: 15
+prev: 15    rec: 15
+prev: 15    rec: 16
+prev: 16    rec: 16
+prev: 16    rec: 17
+prev: 17    rec: 17
+prev: 17    rec: 18
+prev: 18    rec: 18
+prev: 18    rec: 19
+prev: 19    rec: 19
+prev: 19    rec: 19
+prev: 19    rec: 20
+prev: 20    rec: 20
+prev: 20    rec: 21
+prev: 21    rec: 22
+prev: 22    rec: 22
+prev: 22    rec: 24
+prev: 24    rec: 24
+prev: 24    rec: 25
+prev: 25    rec: 25
+prev: 25    rec: 25
+prev: 25    rec: 25
+prev: 25    rec: 25
+prev: 25    rec: 26
+prev: 26    rec: 26
+prev: 26    rec: 27
+prev: 27    rec: 28
+prev: 28    rec: 28
+prev: 28    rec: 29
+prev: 29    rec: 29
+prev: 29    rec: 30
+prev: 30    rec: 31
+prev: 31    rec: 31
+prev: 31    rec: 32
+prev: 32    rec: 32
+prev: 32    rec: 33
+prev: 33    rec: 33
+prev: 33    rec: 33
+prev: 33    rec: 34
+prev: 34    rec: 35
+prev: 35    rec: 36
+prev: 36    rec: 37
+prev: 37    rec: 38
+prev: 38    rec: 39
+prev: 39    rec: 40
+prev: 40    rec: 41
+prev: 41    rec: 42
+prev: 42    rec: 43
+prev: 43    rec: 44
+prev: 44    rec: 45
+prev: 45    rec: 45
+prev: 45    rec: 46
+prev: 46    rec: 47
+prev: 47    rec: 47
+prev: 47    rec: 47
+prev: 47    rec: 48
+prev: 48    rec: 48
+prev: 48    rec: 49
+prev: 49    rec: 49
+prev: 49    rec: 50
+prev: 50    rec: 51
+prev: 51    rec: 51
+prev: 51    rec: 51
+prev: 51    rec: 52
+prev: 52    rec: 52
+prev: 52    rec: 53
+prev: 53    rec: 53
+prev: 53    rec: 54
+prev: 54    rec: 55
+prev: 55    rec: 55
+prev: 55    rec: 55
+prev: 55    rec: 56
+apply_merlin: 
+31 objects in garbage.
+prev: 0    rec: 56
+prev: 56    rec: 55
+ERROR at record number: 1
+prev: 55    rec: 52
+ERROR at record number: 2
+prev: 52    rec: 48
+ERROR at record number: 3
+prev: 48    rec: 43
+ERROR at record number: 4
+prev: 43    rec: 42
+ERROR at record number: 5
+prev: 42    rec: 41
+ERROR at record number: 6
+prev: 41    rec: 40
+ERROR at record number: 7
+prev: 40    rec: 39
+ERROR at record number: 8
+prev: 39    rec: 38
+ERROR at record number: 9
+prev: 38    rec: 37
+ERROR at record number: 10
+prev: 37    rec: 36
+ERROR at record number: 11
+prev: 36    rec: 35
+ERROR at record number: 12
+prev: 35    rec: 34
+ERROR at record number: 13
+prev: 34    rec: 33
+ERROR at record number: 14
+prev: 33    rec: 33
+prev: 33    rec: 32
+ERROR at record number: 16
+prev: 32    rec: 31
+ERROR at record number: 17
+prev: 31    rec: 29
+ERROR at record number: 18
+prev: 29    rec: 22
+ERROR at record number: 19
+prev: 22    rec: 19
+ERROR at record number: 20
+prev: 19    rec: 18
+ERROR at record number: 21
+prev: 18    rec: 17
+ERROR at record number: 22
+prev: 17    rec: 15
+ERROR at record number: 23
+prev: 15    rec: 15
+prev: 15    rec: 14
+ERROR at record number: 25
+prev: 14    rec: 12
+ERROR at record number: 26
+prev: 12    rec: 11
+ERROR at record number: 27
+prev: 11    rec: 10
+ERROR at record number: 28
+prev: 10    rec: 8
+ERROR at record number: 29
+prev: 8    rec: 2
+ERROR at record number: 30
+...............................
+Inserting 31 death records in chronological order...
+D 458209687 at time 2
+D 38997010 at time 8
+D 1789447862 at time 10
+D 1213415012 at time 11
+D 999661724 at time 12
+D 1793329556 at time 14
+D 1588970020 at time 15
+D 1811075214 at time 15
+D 1407343478 at time 17
+D 1940447180 at time 18
+D 245565335 at time 19
+D 183264084 at time 22
+D 914424520 at time 29
+D 517938326 at time 31
+D 110718392 at time 32
+D 425918570 at time 33
+D 1100439041 at time 33
+D 204349222 at time 34
+D 231685785 at time 35
+D 114935352 at time 36
+D 2110121908 at time 37
+D 32374789 at time 38
+D 1973538135 at time 39
+D 1023487453 at time 40
+D 1865127310 at time 41
+D 515132998 at time 42
+D 1694819250 at time 43
+D 2001112025 at time 48
+D 77217300 at time 52
+D 241325412 at time 55
+D 787604730 at time 56
+---------------[ DONE ]------------------------------------------------------------
+#     git version: 378a2338bf7250b3459bf0c8c01263970f4cf820
+#     build date : Mon Nov 17 09:57:04 EST 2025

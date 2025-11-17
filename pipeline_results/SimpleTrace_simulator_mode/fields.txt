@@ -1,0 +1,11 @@
+6 java.security.Permissions permsMap
+9 java.util.IdentityHashMap$IdentityHashMapIterator traversalTable
+1 sun.launcher.LauncherHelper outBuf
+10 java.util.concurrent.ConcurrentHashMap$BaseIterator lastReturned
+7 java.security.PermissionsHash permsMap
+11 java.util.concurrent.ConcurrentHashMap$MapEntry val
+2 sun.launcher.LauncherHelper ostream
+4 sun.launcher.LauncherHelper encoding
+3 sun.launcher.LauncherHelper appClass
+5 java.security.Permissions allPermission
+8 SimpleTrace$Node next
