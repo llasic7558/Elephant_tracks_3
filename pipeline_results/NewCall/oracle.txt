@@ -1,20 +1,22 @@
 # Oracle Event Stream
 # Format: t<event_index>: <event_type>(id=<obj_id>, size=<bytes>, site=<site_id>, thread=<thread_id>)
-# Total events: 14
-# Allocations: 7
-# Frees: 7
+# Total events: 16
+# Allocations: 8
+# Frees: 8
 
-t5: alloc(id=1789447862, size=24, site=62, thread=1950409828)
-t7: free(id=1789447862, size=24, site=62, thread=1950409828)
-t18: alloc(id=1031980531, size=40, site=80, thread=1950409828)
-t27: free(id=1031980531, size=40, site=80, thread=1950409828)
-t39: alloc(id=1490180672, size=32, site=81, thread=1950409828)
-t41: free(id=1490180672, size=32, site=81, thread=1950409828)
-t59: alloc(id=110718392, size=24, site=98, thread=1950409828)
-t65: free(id=110718392, size=24, site=98, thread=1950409828)
-t76: alloc(id=32374789, size=40, site=80, thread=1950409828)
-t85: free(id=32374789, size=40, site=80, thread=1950409828)
-t89: alloc(id=515132998, size=24, site=96, thread=1950409828)
-t92: free(id=515132998, size=24, site=96, thread=1950409828)
-t93: alloc(id=1694819250, size=24, site=97, thread=1950409828)
-t98: free(id=1694819250, size=24, site=97, thread=1950409828)
+t5: alloc(id=1837543557, size=24, site=55, thread=1283928880)
+t7: free(id=1837543557, size=24, site=55, thread=1283928880)
+t18: alloc(id=766572210, size=32, site=75, thread=1283928880)
+t27: free(id=766572210, size=32, site=75, thread=1283928880)
+t51: alloc(id=870698190, size=24, site=93, thread=1283928880)
+t65: free(id=870698190, size=24, site=93, thread=1283928880)
+t72: alloc(id=1389647288, size=40, site=76, thread=1283928880)
+t74: free(id=1389647288, size=40, site=76, thread=1283928880)
+t94: alloc(id=1983747920, size=24, site=125, thread=1283928880)
+t96: free(id=1983747920, size=24, site=125, thread=1283928880)
+t115: alloc(id=581374081, size=32, site=75, thread=1283928880)
+t124: free(id=581374081, size=32, site=75, thread=1283928880)
+t128: alloc(id=33524623, size=24, site=122, thread=1283928880)
+t131: free(id=33524623, size=24, site=122, thread=1283928880)
+t132: alloc(id=947679291, size=24, site=123, thread=1283928880)
+t137: free(id=947679291, size=24, site=123, thread=1283928880)

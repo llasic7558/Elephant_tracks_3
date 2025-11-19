@@ -3,26 +3,26 @@ LotsOfAllocs - Pipeline Summary
 ═══════════════════════════════════════════════════════════════════
 
 Runtime Trace (trace):
-  Total lines: 4119
-  Method entries (M): 1040
-  Method exits (E): 1039
-  Allocations (N): 1004
+  Total lines: 4157
+  Method entries (M): 1054
+  Method exits (E): 1053
+  Allocations (N): 1005
   Arrays (A): 1
-  Field updates (U): 1004
-  Witness/GetField (W): 31
+  Field updates (U): 1005
+  Witness/GetField (W): 39
   Deaths (D): 0
 0 (should be 0 in offline mode)
 
 Offline Merlin Processing (trace_with_deaths):
-  Deaths added: 1005
-  Total lines: 5124
+  Deaths added: 1006
+  Total lines: 5163
 
 After Reordering (trace_reordered):
-  Total lines: 5124
+  Total lines: 5163
   Deaths in correct positions
 
 Oracle (oracle.csv):
-  Total events: 2010
+  Total events: 2012
   Format: CSV with timestamp, event_type, object_id, size, etc.
 
 Files Generated:

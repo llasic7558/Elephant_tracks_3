@@ -3,26 +3,26 @@ SimpleTrace - Pipeline Summary
 ═══════════════════════════════════════════════════════════════════
 
 Runtime Trace (trace):
-  Total lines: 158
-  Method entries (M): 40
-  Method exits (E): 39
-  Allocations (N): 14
+  Total lines: 196
+  Method entries (M): 54
+  Method exits (E): 53
+  Allocations (N): 15
   Arrays (A): 2
-  Field updates (U): 13
-  Witness/GetField (W): 50
+  Field updates (U): 14
+  Witness/GetField (W): 58
   Deaths (D): 0
 0 (should be 0 in offline mode)
 
 Offline Merlin Processing (trace_with_deaths):
-  Deaths added: 16
-  Total lines: 174
+  Deaths added: 17
+  Total lines: 213
 
 After Reordering (trace_reordered):
-  Total lines: 174
+  Total lines: 213
   Deaths in correct positions
 
 Oracle (oracle.csv):
-  Total events: 32
+  Total events: 34
   Format: CSV with timestamp, event_type, object_id, size, etc.
 
 Files Generated:

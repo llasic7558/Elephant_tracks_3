@@ -3,26 +3,26 @@ Methods - Pipeline Summary
 ═══════════════════════════════════════════════════════════════════
 
 Runtime Trace (trace):
-  Total lines: 92
-  Method entries (M): 32
-  Method exits (E): 31
-  Allocations (N): 3
+  Total lines: 130
+  Method entries (M): 46
+  Method exits (E): 45
+  Allocations (N): 4
   Arrays (A): 1
-  Field updates (U): 4
-  Witness/GetField (W): 21
+  Field updates (U): 5
+  Witness/GetField (W): 29
   Deaths (D): 0
 0 (should be 0 in offline mode)
 
 Offline Merlin Processing (trace_with_deaths):
-  Deaths added: 4
-  Total lines: 96
+  Deaths added: 5
+  Total lines: 135
 
 After Reordering (trace_reordered):
-  Total lines: 96
+  Total lines: 135
   Deaths in correct positions
 
 Oracle (oracle.csv):
-  Total events: 8
+  Total events: 10
   Format: CSV with timestamp, event_type, object_id, size, etc.
 
 Files Generated:

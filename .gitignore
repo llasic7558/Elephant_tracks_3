@@ -5,7 +5,8 @@ debug*txt
 target/
 *TEMP*
 dependency-reduced-pom.xml
-
+test_results/
+gem5-workspace/
 # Prerequisites
 *.d
 
@@ -36,7 +37,7 @@ hs_err_pid*
 # Built files
 build/
 bin/
-
+experiments/
 # Logs, notes, trace files
 *.log
 *.org

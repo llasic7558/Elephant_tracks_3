@@ -40,12 +40,12 @@ if [ ! -f "$AGENT_JAR" ]; then
     cd "$BASE_DIR"
 fi
 
-if [ ! -f "$SCRIPTS_DIR/reorder_deaths.py" ]; then
+if [ ! -f "reorder_deaths.py" ]; then
     echo "ERROR: reorder_deaths.py not found at $SCRIPTS_DIR"
     exit 1
 fi
 
-if [ ! -f "$SCRIPTS_DIR/build_oracle.py" ]; then
+if [ ! -f "build_oracle.py" ]; then
     echo "ERROR: build_oracle.py not found at $SCRIPTS_DIR"
     exit 1
 fi
@@ -148,7 +148,7 @@ for test in "${TESTS[@]}"; do
     
     # Step 4: Reorder deaths to correct temporal positions
     echo -e "${YELLOW}[4/5]${NC} Reordering deaths..."
-    python3 "$SCRIPTS_DIR/reorder_deaths.py" \
+    python3 "reorder_deaths.py" \
         "$TEST_DIR/trace_with_deaths" \
         "$TEST_DIR/trace_reordered" \
         > "$TEST_DIR/reorder_output.txt" 2>&1
@@ -165,7 +165,7 @@ for test in "${TESTS[@]}"; do
     
     # Step 5: Build oracle for gem5 simulation
     echo -e "${YELLOW}[5/5]${NC} Building oracle..."
-    python3 "$SCRIPTS_DIR/build_oracle.py" \
+    python3 "build_oracle.py" \
         "$TEST_DIR/trace_reordered" \
         --output "$TEST_DIR/oracle.txt" \
         --csv "$TEST_DIR/oracle.csv" \
